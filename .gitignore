@@ -1,2 +1,6 @@
 node_modules
 .vscode
+api/uploads/*.jpg
+api/uploads/*.png
+api/uploads/*.tiff
+api/uploads/*.jpeg
