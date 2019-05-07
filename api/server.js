@@ -2,12 +2,23 @@ var express = require("express"),
     bodyParser = require("body-parser"),
     client = new require("mongodb").MongoClient(),
     uri = process.env.DB_CONNECTION_STRING,
-    objectId = require("mongodb").ObjectID
+    objectId = require("mongodb").ObjectID,
+    multipart = require("connect-multiparty"),
+    fs = require("fs")
 var app = express()
 
 app.use(bodyParser.urlencoded({extended:true}))
 
 app.use(bodyParser.json())
+
+//CORS
+app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*")
+    next()
+})
+
+//Multipart form
+app.use(multipart())
 
 var PORT = 8095
 
@@ -20,17 +31,33 @@ app.get("/", (req, res) => {
 })
 
 app.post("/api", (req, res) => {
-    var dados = req.body
-    client.connect(uri).then(cli => {
-        var db = cli.db("test")
-        var collection = db.collection('postagens')
-        collection.insert(dados, function(err, results){
-            res.status(err ? 500 : 200).json(err || results)
+    
+    var urlImagem = `${new Date().getTime()}_${req.files.arquivo.originalFilename}`
+    var caminhoOrigem = req.files.arquivo.path
+    var caminhoDestino = `./uploads/${urlImagem}`
+
+    fs.rename(caminhoOrigem, caminhoDestino, function(err) {
+        if(err){
+            res.status(500).send(err)
+            return
+        }
+
+        var dados = {
+            url_imagem: urlImagem,
+            titulo: req.body.titulo
+        }
+        client.connect(uri).then(cli => {
+            var db = cli.db("test")
+            var collection = db.collection('postagens')
+            collection.insert(dados, function(err, results){
+                res.status(err ? 500 : 200).json(err || {status: "Inclusão realizada com sucesso"   })
+                cli.close()
+            })
         })
-    })
-    .catch(err => {
-        console.log(err)
-    })
+        .catch(err => {
+            console.log(err)
+        })
+    })    
 })
 
 app.get("/api", (req, res) => {
@@ -40,6 +67,7 @@ app.get("/api", (req, res) => {
         var collection = db.collection('postagens')
         collection.find().toArray(function(err, results){
             res.status(err ? 500 : 200).json(err || results)
+            cli.close()
         })
     })
     .catch(err => {
@@ -53,6 +81,7 @@ app.get("/api/:id", (req, res) => {
         var collection = db.collection('postagens')
         collection.find(objectId(req.params.id)).toArray(function(err, results){
             res.status(err ? 500 : 200).json(err || results)
+            cli.close()
         })
     })
     .catch(err => {
@@ -71,6 +100,7 @@ app.put("/api/:id", (req, res) => {
             {},
             function(err, results){
                 res.status(err ? 500 : 200).json(err || results)
+                cli.close()
             })
     })
     .catch(err => {
@@ -87,9 +117,23 @@ app.delete("/api/:id", (req, res) => {
             { _id: objectId(req.params.id) },
             function(err, results){
                 res.status(err ? 500 : 200).json(err || results)
+                cli.close()
             })
     })
     .catch(err => {
         console.log(err)
+    })
+})
+
+app.get("/imagens/:imagem", (req, res) =>{
+    fs.readFile(`./uploads/${req.params.imagem}`,function(erro, data){
+        if(erro){
+            res.status(400).send(erro)
+        }else{
+            res.writeHead(200, {
+                "content-type": "image/png"
+            })
+            res.end(data)
+        }
     })
 })

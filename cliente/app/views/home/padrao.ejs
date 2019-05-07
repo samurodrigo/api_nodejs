@@ -16,7 +16,32 @@
 
 		<script>
 			$(document).ready(function(){
+                var obterPublicacoes = function(){
+                    var xhr = new XMLHttpRequest();
+                    xhr.onload = function(){
+                        if(xhr.status == 200){
+                            $("#container_timeline").html("")
+                            var json = JSON.parse(xhr.responseText)
 
+                            $.each(json, function(index, item){
+                                var html = `
+                                    <div class="publicacao">
+                                        <span class="titulo">
+                                            ${item.titulo}
+                                        </span>
+                                        <img src="http://localhost:8095/imagens/${item.url_imagem}">
+                                    </div>
+                                `;
+
+                                $("#container_timeline").append(html)
+                            });
+                        }
+                    }
+                    xhr.open("GET", "http://localhost:8095/api")
+                    xhr.send()
+                }
+                
+                obterPublicacoes();
 				$('#btn_incluir').click(function(){
 					$('#container_timeline').hide();
 					$('#container_form').show();
@@ -26,7 +51,27 @@
 					$('#container_timeline').show();
 					$('#container_form').hide();
 					return false;
-				});
+                });
+                
+                $('#btn-publicar').click(function(){
+                    var arquivo = document.getElementById("arquivo").files[0];
+                    var titulo = document.getElementById("titulo").value;
+                    debugger
+                    var formData = new FormData();
+                    formData.append("arquivo", arquivo);
+                    formData.append("titulo", titulo);
+                    var xhr = new XMLHttpRequest();
+                    
+                    xhr.onreadystatechange = function(){
+                        if(xhr.readyState){
+                            document.getElementById("mensagem").innerHTML = xhr.responseText
+                            obterPublicacoes();
+                        }
+                    };
+
+                    xhr.open("POST", "http://localhost:8095/api")
+                    xhr.send(formData);
+                })
 
 			});
 		</script>
