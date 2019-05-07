@@ -30,9 +30,12 @@
                                             ${item.titulo}
                                         </span>
                                         <img src="http://localhost:8095/imagens/${item.url_imagem}">
+										<div class="comentar">
+											<input type="text" class="form-control input_comentario" placeholder="Adicione um comentário">
+											<button class="btn btn-default btn-postagem" type="button">Comentar</button>
+										</div>
                                     </div>
                                 `;
-
                                 $("#container_timeline").append(html)
                             });
                         }
