@@ -14,6 +14,9 @@ app.use(bodyParser.json())
 //CORS
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*")
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
+    res.setHeader("Access-Control-Allow-Headers", "content-type")  
+    res.setHeader("Access-Control-Allow-Credentials", true)
     next()
 })
 
@@ -90,13 +93,20 @@ app.get("/api/:id", (req, res) => {
 })
 
 app.put("/api/:id", (req, res) => {
-    var dados = req.body
+    
     client.connect(uri).then(cli => {
         var db = cli.db("test")
         var collection = db.collection('postagens')
         collection.update(
             { _id: objectId(req.params.id) },
-            { $set: dados },
+            { 
+                $push: {
+                    comentarios: {
+                        idComentario: new objectId(),
+                        comentario: req.body.comentario
+                    }
+                } 
+            },
             {},
             function(err, results){
                 res.status(err ? 500 : 200).json(err || results)

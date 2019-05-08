@@ -30,14 +30,36 @@
                                             ${item.titulo}
                                         </span>
                                         <img src="http://localhost:8095/imagens/${item.url_imagem}">
-										<div class="comentar">
-											<input type="text" class="form-control input_comentario" placeholder="Adicione um comentário">
-											<button class="btn btn-default btn-postagem" type="button">Comentar</button>
+                                        <div class="comentarios" id="comentarios_${item._id}"></div>
+                                        <div class="comentar">
+											<input type="text" class="form-control input_comentario" id="postagem_${item._id}" placeholder="Adicione um comentário">
+											<button class="btn btn-default btn-postagem" value="${item._id}" type="button">Comentar</button>
 										</div>
                                     </div>
                                 `;
                                 $("#container_timeline").append(html)
+                                if(item.comentarios){
+                                    for(j = 0; j < item.comentarios.length; j++){
+                                        html = `<div class="txt_comentario">
+                                                    ${item.comentarios[j].comentario}
+                                                </div>`;
+                                        $("#comentarios_"+item._id).append(html)
+                                    }
+                                }
                             });
+
+                            $(".btn-postagem").click(function(){
+                                var id = this.value;
+                                var comentario = $(`#postagem_${id}`).val();
+                                var request = new XMLHttpRequest();
+                                request.open("PUT", "http://localhost:8095/api/" + id);
+                                request.onload = function(){
+                                    if(request.status == 200)
+                                        location.href = "/home";
+                                }
+                                request.setRequestHeader("Content-Type", "application/json");                                
+                                request.send(JSON.stringify({comentario: comentario}));
+                            })
                         }
                     }
                     xhr.open("GET", "http://localhost:8095/api")
