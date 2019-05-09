@@ -119,12 +119,19 @@ app.put("/api/:id", (req, res) => {
 })
 
 app.delete("/api/:id", (req, res) => {
-    var dados = req.body
     client.connect(uri).then(cli => {
         var db = cli.db("test")
         var collection = db.collection('postagens')
-        collection.remove(
-            { _id: objectId(req.params.id) },
+        collection.update(
+            {  },
+            { 
+                $pull: {
+                    comentarios: {
+                        idComentario: objectId(req.params.id)
+                    }
+                }
+            },
+            { multi: true },
             function(err, results){
                 res.status(err ? 500 : 200).json(err || results)
                 cli.close()

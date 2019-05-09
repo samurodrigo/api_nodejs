@@ -41,11 +41,24 @@
                                 if(item.comentarios){
                                     for(j = 0; j < item.comentarios.length; j++){
                                         html = `<div class="txt_comentario">
+                                                    <button value="${item.comentarios[j].idComentario}" class="btn btn-default btn_remover_postagem">X</button>
                                                     ${item.comentarios[j].comentario}
                                                 </div>`;
                                         $("#comentarios_"+item._id).append(html)
                                     }
                                 }
+                            });
+
+                            $(".btn_remover_postagem").click(function(){
+                                var idComentario = this.value;
+                                var request = new XMLHttpRequest();
+                                request.open("DELETE", "http://localhost:8095/api/" + idComentario);
+                                request.onload = function(){
+                                    if(request.status == 200)
+                                        location.href = "/home";
+                                }
+                                request.setRequestHeader("Content-Type", "application/json");                                
+                                request.send();
                             });
 
                             $(".btn-postagem").click(function(){
